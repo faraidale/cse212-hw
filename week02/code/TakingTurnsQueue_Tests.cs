@@ -11,7 +11,15 @@ public class TakingTurnsQueueTests
     // Scenario: Create a queue with the following people and turns: Bob (2), Tim (5), Sue (3) and
     // run until the queue is empty
     // Expected Result: Bob, Tim, Sue, Bob, Tim, Sue, Tim, Sue, Tim, Tim
-    // Defect(s) Found: 
+    // The queue should become empty when every finite turn has been used.
+    // Original baseline: FAIL. The first name assertion reported
+    // "Assert.AreEqual failed. Expected:<Bob>. Actual:<Sue>."
+    // The test stopped there; later turns and queue exhaustion were not evaluated.
+    // Defects found: PersonQueue.Enqueue inserted at the front instead of the back.
+    // GetNextPerson also failed to decrement the last finite turn; it now decrements
+    // every positive turn count and re-enqueues only when positive turns remain.
+    // Post-fix: PASS. Every executed name assertion passed and the loop reached an
+    // empty queue without triggering its extra-turn failure guard.
     public void TestTakingTurnsQueue_FiniteRepetition()
     {
         var bob = new Person("Bob", 2);
@@ -43,7 +51,14 @@ public class TakingTurnsQueueTests
     // Scenario: Create a queue with the following people and turns: Bob (2), Tim (5), Sue (3)
     // After running 5 times, add George with 3 turns.  Run until the queue is empty.
     // Expected Result: Bob, Tim, Sue, Bob, Tim, Sue, Tim, George, Sue, Tim, George, Tim, George
-    // Defect(s) Found: 
+    // George should join the back after five turns, and all finite players should finish.
+    // Original baseline: FAIL. The first name assertion reported
+    // "Assert.AreEqual failed. Expected:<Bob>. Actual:<Sue>."
+    // The test stopped before adding George; later assertions were not evaluated.
+    // Defects found: Front insertion violated FIFO for new and returning players;
+    // the last finite turn also needed decrementing before the player left the queue.
+    // Post-fix: PASS. All 13 expected names matched, including George after he joined
+    // at the back, and the queue became empty without triggering the failure guard.
     public void TestTakingTurnsQueue_AddPlayerMidway()
     {
         var bob = new Person("Bob", 2);
@@ -85,7 +100,14 @@ public class TakingTurnsQueueTests
     // Scenario: Create a queue with the following people and turns: Bob (2), Tim (Forever), Sue (3)
     // Run 10 times.
     // Expected Result: Bob, Tim, Sue, Bob, Tim, Sue, Tim, Sue, Tim, Tim
-    // Defect(s) Found: 
+    // Tim should remain available indefinitely with his original Turns value of 0.
+    // Original baseline: FAIL. The first name assertion reported
+    // "Assert.AreEqual failed. Expected:<Bob>. Actual:<Sue>."
+    // The test stopped there; later names and the infinite-turn marker were not checked.
+    // Defects found: Front insertion broke FIFO, and GetNextPerson never re-enqueued
+    // players with zero turns. Infinite players now return to the back unchanged.
+    // Post-fix: PASS. All ten names matched; the additional dequeue returned Tim
+    // and the final assertion confirmed his Turns value was still 0.
     public void TestTakingTurnsQueue_ForeverZero()
     {
         var timTurns = 0;
@@ -116,7 +138,14 @@ public class TakingTurnsQueueTests
     // Scenario: Create a queue with the following people and turns: Tim (Forever), Sue (3)
     // Run 10 times.
     // Expected Result: Tim, Sue, Tim, Sue, Tim, Sue, Tim, Tim, Tim, Tim
-    // Defect(s) Found: 
+    // Tim should remain available indefinitely with his original Turns value of -3.
+    // Original baseline: FAIL. The first name assertion reported
+    // "Assert.AreEqual failed. Expected:<Tim>. Actual:<Sue>."
+    // The test stopped there; later names and the infinite-turn marker were not checked.
+    // Defects found: Front insertion broke FIFO, and GetNextPerson never re-enqueued
+    // negative-turn players. Infinite players now return to the back unchanged.
+    // Post-fix: PASS. All ten names matched; the additional dequeue returned Tim
+    // and the final assertion confirmed his Turns value was still -3.
     public void TestTakingTurnsQueue_ForeverNegative()
     {
         var timTurns = -3;
@@ -143,7 +172,11 @@ public class TakingTurnsQueueTests
     [TestMethod]
     // Scenario: Try to get the next person from an empty queue
     // Expected Result: Exception should be thrown with appropriate error message.
-    // Defect(s) Found: 
+    // Specifically, InvalidOperationException must have the message "No one in the queue."
+    // Original baseline: PASS. GetNextPerson threw InvalidOperationException and
+    // the assertion confirmed the exact message "No one in the queue."
+    // Defects found: None in the existing empty-queue guard; it was preserved.
+    // Post-fix: PASS. The same exception type and exact message were confirmed.
     public void TestTakingTurnsQueue_Empty()
     {
         var players = new TakingTurnsQueue();
