@@ -1,5 +1,16 @@
 public class FeatureCollection
 {
-    // TODO Problem 5 - ADD YOUR CODE HERE
-    // Create additional classes as necessary
+    public Feature[] Features { get; set; }
+}
+
+public class Feature
+{
+    public EarthquakeProperties Properties { get; set; }
+}
+
+public class EarthquakeProperties
+{
+    // USGS may supply null for the place or magnitude.
+    public string Place { get; set; }
+    public double? Mag { get; set; }
 }
