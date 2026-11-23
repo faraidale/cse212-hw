@@ -11,8 +11,7 @@ public class Node
 
     public void Insert(int value)
     {
-        // TODO Start Problem 1
-
+        // Equal values take neither branch, leaving the existing tree unchanged.
         if (value < Data)
         {
             // Insert to the left
@@ -21,7 +20,7 @@ public class Node
             else
                 Left.Insert(value);
         }
-        else
+        else if (value > Data)
         {
             // Insert to the right
             if (Right is null)
@@ -33,13 +32,21 @@ public class Node
 
     public bool Contains(int value)
     {
-        // TODO Start Problem 2
-        return false;
+        if (value == Data)
+            return true;
+
+        // BST ordering lets us search only the child that could contain the value.
+        if (value < Data)
+            return Left is not null && Left.Contains(value);
+
+        return Right is not null && Right.Contains(value);
     }
 
     public int GetHeight()
     {
-        // TODO Start Problem 4
-        return 0; // Replace this line with the correct return statement(s)
+        // Missing children have height zero; calculate each subtree once.
+        var leftHeight = Left?.GetHeight() ?? 0;
+        var rightHeight = Right?.GetHeight() ?? 0;
+        return 1 + Math.Max(leftHeight, rightHeight);
     }
 }
